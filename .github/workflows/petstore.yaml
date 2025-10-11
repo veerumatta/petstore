@@ -1,8 +1,8 @@
 name: ci/cd pipeline to deploy to connet
-  on:
+on:
     push:
       branches:master
-  jobs:
+jobs:
     build-deploy:
       runs-on: ubuntu-latest
       steps:
