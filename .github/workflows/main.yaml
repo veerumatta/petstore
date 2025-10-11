@@ -78,3 +78,6 @@ jobs:
           curl -v -u ${{ secrets.TOMCAT_PROD_USER }}:${{ secrets.TOMCAT_PROD_PASSWORD }} \
           -T target/jpetstore-6.1.1-SNAPSHOT.war \
           "http://${{ secrets.TOMCAT_PROD_HOST }}:8080/manager/text/deploy?path=/petstore-prod&update=true"
+
+
+          
