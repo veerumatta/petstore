@@ -1,0 +1,31 @@
+name: ci/cd pipeline to deploy to connet
+  on:
+    push:
+      branches:master
+  jobs:
+    build-deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: checkout-code
+          uses: actions/checkout@v3
+        - name: set-up jdk
+          uses: actions/setup java@v3
+          with:
+            distribution: 'temurin'
+            java-version: '17'
+        - name: validate with maven
+          run: mvn validate
+        - name: compile with maven
+          run: mvn compile
+        - name: test with maven
+          run: mvn test
+        - name: package with maven
+          run: mvn package
+        - name: verify war file
+          run: ls -lh target/
+#deplot to tomcat
+        - name: deploy war to tomcat
+         run : |
+                  curl -v -u ${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }} \
+                   -T target/jpetstore-6.1.1-SNAPSHOT.war \
+                   "http://${{ secrets.TOMCAT_HOST }}:8080/manager/text/deploy?path=/petstore&update=true"
