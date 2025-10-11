@@ -1,0 +1,80 @@
+name: CI/CD Pipeline for Petstore Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build and Package WAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Validate with Maven
+        run: mvn validate
+
+      - name: Compile with Maven
+        run: mvn compile
+
+      - name: Test with Maven
+        run: mvn test
+
+      - name: Package with Maven
+        run: mvn package
+
+      - name: Verify WAR File
+        run: ls -lh target/
+
+  deploy-dev:
+    name: Deploy to DEV Environment
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy WAR to Tomcat DEV
+        run: |
+          curl -v -u ${{ secrets.TOMCAT_DEV_USER }}:${{ secrets.TOMCAT_DEV_PASSWORD }} \
+          -T target/jpetstore-6.1.1-SNAPSHOT.war \
+          "http://${{ secrets.TOMCAT_DEV_HOST }}:8080/manager/text/deploy?path=/petstore-dev&update=true"
+
+  deploy-test:
+    name: Deploy to TEST Environment
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy WAR to Tomcat TEST
+        run: |
+          curl -v -u ${{ secrets.TOMCAT_TEST_USER }}:${{ secrets.TOMCAT_TEST_PASSWORD }} \
+          -T target/jpetstore-6.1.1-SNAPSHOT.war \
+          "http://${{ secrets.TOMCAT_TEST_HOST }}:8080/manager/text/deploy?path=/petstore-test&update=true"
+
+  deploy-preprod:
+    name: Deploy to PRE-PROD Environment
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy WAR to Tomcat PRE-PROD
+        run: |
+          curl -v -u ${{ secrets.TOMCAT_PREPROD_USER }}:${{ secrets.TOMCAT_PREPROD_PASSWORD }} \
+          -T target/jpetstore-6.1.1-SNAPSHOT.war \
+          "http://${{ secrets.TOMCAT_PREPROD_HOST }}:8080/manager/text/deploy?path=/petstore-preprod&update=true"
+
+  deploy-prod:
+    name: Deploy to PROD Environment
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy WAR to Tomcat PROD
+        run: |
+          curl -v -u ${{ secrets.TOMCAT_PROD_USER }}:${{ secrets.TOMCAT_PROD_PASSWORD }} \
+          -T target/jpetstore-6.1.1-SNAPSHOT.war \
+          "http://${{ secrets.TOMCAT_PROD_HOST }}:8080/manager/text/deploy?path=/petstore-prod&update=true"
