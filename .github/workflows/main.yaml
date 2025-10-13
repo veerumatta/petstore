@@ -49,6 +49,7 @@ jobs:
   deploy-test:
     name: Deploy to TEST Environment
     needs: build
+    if: github.event.inputs.deploy_test == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy WAR to Tomcat TEST
@@ -60,6 +61,7 @@ jobs:
   deploy-preprod:
     name: Deploy to PRE-PROD Environment
     needs: build
+    if: github.event.inputs.deploy_preprod == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy WAR to Tomcat PRE-PROD
@@ -71,6 +73,7 @@ jobs:
   deploy-prod:
     name: Deploy to PROD Environment
     needs: build
+    if: github.event.inputs.deploy_prod == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy WAR to Tomcat PROD
@@ -78,6 +81,3 @@ jobs:
           curl -v -u ${{ secrets.TOMCAT_PROD_USER }}:${{ secrets.TOMCAT_PROD_PASSWORD }} \
           -T target/jpetstore-6.1.1-SNAPSHOT.war \
           "http://${{ secrets.TOMCAT_PROD_HOST }}:8080/manager/text/deploy?path=/petstore-prod&update=true"
-
-
-          
