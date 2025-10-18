@@ -2,9 +2,8 @@ name: CI/CD Pipeline for Petstore Deployment
 
 on:
   push:
-    branches:
-      - master
-
+    branches: [ master]
+  workflow_dispatch:
 jobs:
   build:
     name: Build and Package WAR
@@ -12,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set Up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -39,20 +38,15 @@ jobs:
       - name: Upload WAR Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: petstore-war
-          path: target/*.war
+          name: war-file
+          path: ${{ env.WAR_FILE}}
 
   deploy-dev:
     name: Deploy to DEV Environment
     needs: build
     runs-on: ubuntu-latest
     steps:
-      # ✅ Download WAR file from build job
-      - name: Download WAR Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: petstore-war
-          path: target/
+    
 
       - name: Deploy WAR to Tomcat DEV
         run: |
