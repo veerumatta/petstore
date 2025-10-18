@@ -3,7 +3,7 @@ name: CI/CD Pipeline for Petstore Deployment
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build:
@@ -35,11 +35,25 @@ jobs:
       - name: Verify WAR File
         run: ls -lh target/
 
+      # ✅ Upload the WAR file so other jobs can access it
+      - name: Upload WAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: petstore-war
+          path: target/*.war
+
   deploy-dev:
     name: Deploy to DEV Environment
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # ✅ Download WAR file from build job
+      - name: Download WAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: petstore-war
+          path: target/
+
       - name: Deploy WAR to Tomcat DEV
         run: |
           curl -v -u ${{ secrets.TOMCAT_DEV_USER }}:${{ secrets.TOMCAT_DEV_PASSWORD }} \
@@ -49,9 +63,14 @@ jobs:
   deploy-test:
     name: Deploy to TEST Environment
     needs: build
-    if: github.event.inputs.deploy_test == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Download WAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: petstore-war
+          path: target/
+
       - name: Deploy WAR to Tomcat TEST
         run: |
           curl -v -u ${{ secrets.TOMCAT_TEST_USER }}:${{ secrets.TOMCAT_TEST_PASSWORD }} \
@@ -61,9 +80,14 @@ jobs:
   deploy-preprod:
     name: Deploy to PRE-PROD Environment
     needs: build
-    if: github.event.inputs.deploy_preprod == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Download WAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: petstore-war
+          path: target/
+
       - name: Deploy WAR to Tomcat PRE-PROD
         run: |
           curl -v -u ${{ secrets.TOMCAT_PREPROD_USER }}:${{ secrets.TOMCAT_PREPROD_PASSWORD }} \
@@ -73,11 +97,17 @@ jobs:
   deploy-prod:
     name: Deploy to PROD Environment
     needs: build
-    if: github.event.inputs.deploy_prod == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Download WAR Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: petstore-war
+          path: target/
+
       - name: Deploy WAR to Tomcat PROD
         run: |
           curl -v -u ${{ secrets.TOMCAT_PROD_USER }}:${{ secrets.TOMCAT_PROD_PASSWORD }} \
           -T target/jpetstore-6.1.1-SNAPSHOT.war \
           "http://${{ secrets.TOMCAT_PROD_HOST }}:8080/manager/text/deploy?path=/petstore-prod&update=true"
+
